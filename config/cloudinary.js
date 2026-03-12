@@ -11,7 +11,7 @@ const cloudinaryConnect = () => {
             secure: true
         });
 
-        console.log("Cloudinary connected successfully");
+        // console.log("Cloudinary connected successfully");
 
     } catch (err) {
         console.log("Error while connecting cloudinary", err);

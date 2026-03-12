@@ -10,7 +10,10 @@ dns.setServers([
   "1.1.1.1",   // Cloudflare primary
   "1.0.0.1"    // Cloudflare fallback
 ]);
-console.log("DNS Servers:", dns.getServers());
+
+// console.log("DNS Servers:", dns.getServers());
+
+
 const { errorHandler } = require("./middlewares/errorHandler");
 const authRoute = require("./routes/authRoute");
 const limiter = require("./middlewares/rateLimiter");
