@@ -1,6 +1,9 @@
 const express = require("express");
 const helmet = require("helmet");
 const fileUpload = require("express-fileupload");
+require("dotenv").config()
+
+const dns = require("dns");
 
 const { errorHandler } = require("./middlewares/errorHandler");
 const authRoute = require("./routes/authRoute");
@@ -9,9 +12,10 @@ const limiter = require("./middlewares/rateLimiter");
 const hpp = require("hpp");
 const ExpressMongoSanitize = require("express-mongo-sanitize");
 const cors = require("cors");
+const connectdb = require("./config/database");
 
 const app = express();
-
+connectdb()
 // Body parser
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

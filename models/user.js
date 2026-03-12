@@ -21,6 +21,23 @@ const userSchema = new mongoose.Schema({
         lowercase: true,
         validate: [validator.isEmail, "Please provide a valid email"]
     },
+    password: {
+        type: String,
+        required: [true, "Password is required"],
+        trim: true,
+        validate: {
+            validator: function (v) {
+                return validator.isStrongPassword(v, {
+                    minLength: 8,
+                    minLowercase: 1,
+                    minUppercase: 1,
+                    minNumbers: 1,
+                    minSymbols: 0
+                })
+            },
+            message: "Password must contain upper, lower and number"
+        }
+    },
     contact: {
         type: String,
         required: true,
@@ -30,6 +47,15 @@ const userSchema = new mongoose.Schema({
             },
             message: "Please provide valid Indian phone number"
         }
+    },
+    role: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Role",
+        required: true
+    },
+    candidate: {
+        type: mongoose.Types.ObjectId,
+        ref: "Candidate"
     }
 }, { timestamps: true });
 
