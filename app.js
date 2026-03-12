@@ -4,7 +4,13 @@ const fileUpload = require("express-fileupload");
 require("dotenv").config()
 
 const dns = require("dns");
-
+dns.setServers([
+  "8.8.8.8",   // Google primary
+  "8.8.4.4",   // Google secondary
+  "1.1.1.1",   // Cloudflare primary
+  "1.0.0.1"    // Cloudflare fallback
+]);
+console.log("DNS Servers:", dns.getServers());
 const { errorHandler } = require("./middlewares/errorHandler");
 const authRoute = require("./routes/authRoute");
 const limiter = require("./middlewares/rateLimiter");
@@ -13,9 +19,11 @@ const hpp = require("hpp");
 const ExpressMongoSanitize = require("express-mongo-sanitize");
 const cors = require("cors");
 const connectdb = require("./config/database");
+const cloudinaryConnect = require("./config/cloudinary");
 
 const app = express();
 connectdb()
+cloudinaryConnect()
 // Body parser
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

@@ -13,7 +13,7 @@ const rateLimit = require("express-rate-limit");
 
 // module.exports = limiter;
 
-const rateLimiter = (maxRequest = 100, time = 10) => rateLimit({
+const rateLimiter = (maxRequest = 50, time = 1) => rateLimit({
     windowMs: time * 60 * 1000,// dynamic time
     max: maxRequest, // dynamic max request  100
     message: {

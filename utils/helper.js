@@ -22,8 +22,6 @@ const validateFile = (file) => {
 };
 
 
-
-
 // DATE HANDLER
 const dateHandler = (date = Date.now()) => {
     const d = new Date(date);
@@ -39,8 +37,18 @@ const dateHandler = (date = Date.now()) => {
 };
 
 
+// USER VALIDATOR
+const ROLES = {
+    SUPER_ADMIN: "Super-Admin",
+    ADMIN: "Admin",
+    CANDIDATE: "Candidate",
+    VOTER: "Voter"
+};
+
+
 
 module.exports = {
     validateFile,
-    dateHandler
+    dateHandler,
+    ROLES,
 };

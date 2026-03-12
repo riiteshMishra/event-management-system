@@ -1,12 +1,52 @@
 const { errorHandler } = require("../middlewares/errorHandler");
+const validator = require("validator")
+const crypto = require("crypto");
+const OTP = require("../models/otp")
 
-exports.createLoginToken = async (req, res, next) => {
+exports.sendOTP = async (req, res, next) => {
   try {
 
+    let { email } = req.body;
+
+    if (!validator.isEmail(email)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Email",
+        input: email
+      });
+    }
+
+    // Sanitization
+    email = email.trim().toLowerCase();
+
+    const randOTP = crypto.randomInt(100000, 999999).toString();
+
+    // check existing otp
+    const alreadyOTP = await OTP.findOne({ email });
+
+    if (alreadyOTP) {
+      return res.status(429).json({
+        success: false,
+        message: "OTP already sent. Please wait."
+      });
+    }
+
+    const data = await OTP.create({
+      email,
+      otp: randOTP
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "OTP sent successfully",
+      data: data.otp
+    });
+
   } catch (err) {
-    return next(err)
+    console.log("Error While Sending Email", err);
+    next(err);
   }
-}
+};
 
 exports.login = async (req, res, next) => {
   try {
