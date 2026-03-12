@@ -38,12 +38,7 @@ const dateHandler = (date = Date.now()) => {
 
 
 // USER VALIDATOR
-const ROLES = {
-    SUPER_ADMIN: "Super-Admin",
-    ADMIN: "Admin",
-    CANDIDATE: "Candidate",
-    VOTER: "Voter"
-};
+const ROLES = ["super-admin", "admin", "gram-pradhan"];
 
 
 

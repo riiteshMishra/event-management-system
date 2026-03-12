@@ -19,11 +19,13 @@ const userSchema = new mongoose.Schema({
         required: [true, "Email is required"],
         unique: true,
         lowercase: true,
+        trim: true,
         validate: [validator.isEmail, "Please provide a valid email"]
     },
     password: {
         type: String,
         required: [true, "Password is required"],
+        select: false,
         trim: true,
         validate: {
             validator: function (v) {
@@ -37,10 +39,12 @@ const userSchema = new mongoose.Schema({
             },
             message: "Password must contain upper, lower and number"
         }
+
     },
-    contact: {
+    phoneNumber: {
         type: String,
         required: true,
+        unique: true,
         validate: {
             validator: function (v) {
                 return validator.isMobilePhone(v, "en-IN");
@@ -49,14 +53,24 @@ const userSchema = new mongoose.Schema({
         }
     },
     role: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Role",
-        required: true
+        type: String,
+        required: true,
+        trim: true,
+        enum: ["super-admin", "admin", "gram-prdhan"]
     },
     candidate: {
-        type: mongoose.Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: "Candidate"
+    },
+    isActive: {
+        type: Boolean,
+        default: true,
+    },
+    isVerified: {
+        type: Boolean,
+        default: false
     }
+
 }, { timestamps: true });
 
 module.exports = mongoose.model("User", userSchema);
