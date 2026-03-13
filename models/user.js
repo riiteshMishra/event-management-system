@@ -1,5 +1,7 @@
 const mongoose = require("mongoose");
 const validator = require("validator");
+const bcrypt = require("bcrypt");
+
 
 const userSchema = new mongoose.Schema({
     firstName: {
@@ -22,29 +24,25 @@ const userSchema = new mongoose.Schema({
         trim: true,
         validate: [validator.isEmail, "Please provide a valid email"]
     },
+    image: {
+        type: String,
+        default: ""
+        // required: true
+    },
+    profile: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Profile",
+        // required: true
+    },
     password: {
         type: String,
         required: [true, "Password is required"],
         select: false,
         trim: true,
-        validate: {
-            validator: function (v) {
-                return validator.isStrongPassword(v, {
-                    minLength: 8,
-                    minLowercase: 1,
-                    minUppercase: 1,
-                    minNumbers: 1,
-                    minSymbols: 0
-                })
-            },
-            message: "Password must contain upper, lower and number"
-        }
-
     },
     phoneNumber: {
         type: String,
         required: true,
-        unique: true,
         validate: {
             validator: function (v) {
                 return validator.isMobilePhone(v, "en-IN");
@@ -72,5 +70,16 @@ const userSchema = new mongoose.Schema({
     }
 
 }, { timestamps: true });
+
+
+userSchema.pre("save", async function () {
+
+    // password modified or not
+    if (!this.isModified("password")) return;
+
+    // hash password
+    this.password = await bcrypt.hash(this.password, 10);
+});
+
 
 module.exports = mongoose.model("User", userSchema);

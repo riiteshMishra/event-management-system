@@ -5,7 +5,7 @@ const bcrypt = require("bcrypt")
 const OTP = require("../models/otp")
 const User = require("../models/user");
 const { ROLES } = require("../utils/helper");
-
+const Profile = require("../models/profile")
 
 // SEND OTP
 exports.sendOTP = async (req, res, next) => {
@@ -58,14 +58,6 @@ exports.signUp = async (req, res, next) => {
   try {
     let { firstName, lastName, role, email, password, confirmPassword, phoneNumber, otp } = req.body
 
-    // check user aleardy exist
-    const existedUser = await User.findOne({ email })
-    if (existedUser) {
-      const err = new Error("User already exist please login with this email");
-      err.statusCode = 400;
-      return next(err)
-    }
-
     // VALIDATION
     if (
       !firstName ||
@@ -104,8 +96,16 @@ exports.signUp = async (req, res, next) => {
       return next(err);
     }
 
+    // check user aleardy exist
+    const existedUser = await User.findOne({ email })
+    if (existedUser) {
+      const err = new Error("User already exist please login with this email");
+      err.statusCode = 400;
+      return next(err)
+    }
+
     // OTP Match
-    const dbOtp = await OTP.findOne({ email }).sort({ createdAt: -1 }).limit(1);
+    const dbOtp = await OTP.findOne({ email }).sort({ createdAt: -1 });
 
     if (!dbOtp) {
       const err = new Error("OTP expired or not found");
@@ -119,19 +119,34 @@ exports.signUp = async (req, res, next) => {
       return next(err);
     }
 
-    // OTP matched
+    const OTP_EXPIRY = 5 * 60 * 1000;
 
-    // delete OTP so it can't be reused
-    await OTP.deleteOne({ email })
-
-    // Password Hash
-    const hashedPassword = await bcrypt.hash(password, 10);
+    if (Date.now() - dbOtp.createdAt > OTP_EXPIRY) {
+      const err = new Error("OTP expired");
+      err.statusCode = 400;
+      return next(err);
+    }
+    // OTP matched next step
 
     if (!ROLES.includes(role)) {
       const err = new Error("Invalid Role");
       err.statusCode = 400;
       return next(err);
     }
+
+    // Create Profile
+    const profile = new Profile({
+      gender: null,
+      dateOfBirth: null,
+      coverImage: null,
+      bio: null,
+      address: {
+        village: null,
+        district: null,
+        state: null,
+        pincode: null
+      }
+    });
 
     // Create User
     const user = await User.create({
@@ -140,15 +155,26 @@ exports.signUp = async (req, res, next) => {
       email,
       role,
       phoneNumber,
-      password: hashedPassword
+      password,
+      profile: profile._id
     })
 
+    // save user id in profile
+    profile.userId = user?._id;
+    await profile.save()
+
+
+    // delete OTP so it can't be reused
+    await OTP.deleteMany({ email })
+
+    // RETURN response
     return res.status(201).json({
       success: true,
       message: 'signed up successfully',
       data: user
     })
   } catch (err) {
+    console.log("Error while sign up", err)
     return next(err)
   }
 }
@@ -156,8 +182,8 @@ exports.signUp = async (req, res, next) => {
 // TODO LOGIN
 exports.login = async (req, res, next) => {
   try {
-   
 
+    let { email, password, } = req.body;
     return res.status(200).json({
       success: true,
       message: "Login successful",
