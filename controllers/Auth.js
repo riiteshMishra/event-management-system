@@ -134,6 +134,9 @@ exports.signUp = async (req, res, next) => {
       return next(err);
     }
 
+    // avatar
+    const image = `https://api.dicebear.com/9.x/adventurer/svg?seed=${email}`
+
     // Create Profile
     const profile = new Profile({
       gender: null,
@@ -156,7 +159,8 @@ exports.signUp = async (req, res, next) => {
       role,
       phoneNumber,
       password,
-      profile: profile._id
+      profile: profile._id,
+      avatar: image,
     })
 
     // save user id in profile
@@ -184,10 +188,16 @@ exports.login = async (req, res, next) => {
   try {
 
     let { email, password, } = req.body;
+
+    // sanitize -
+    email = email.toString().toLowerCase().trim();
+    password = password.toString().trim()
+
+
     return res.status(200).json({
       success: true,
       message: "Login successful",
-      data: userCard,
+      data: req.body
 
     });
   } catch (err) {
