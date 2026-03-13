@@ -6,6 +6,12 @@ const OTP = require("../models/otp")
 const User = require("../models/user");
 const { ROLES } = require("../utils/helper");
 const Profile = require("../models/profile")
+const jwt = require("jsonwebtoken")
+require("dotenv").config()
+const cookie = require("cookie")
+
+
+
 
 // SEND OTP
 exports.sendOTP = async (req, res, next) => {
@@ -189,19 +195,61 @@ exports.login = async (req, res, next) => {
 
     let { email, password, } = req.body;
 
+    // checks
+    if (!email || !password) {
+      const error = new Error("Email and password are required");
+      error.statusCode = 400;
+      return next(error);
+    }
+
     // sanitize -
     email = email.toString().toLowerCase().trim();
     password = password.toString().trim()
 
+    // user dhundo
+    const userData = await User.findOne({ email }).select("+password");
 
+
+    // ab password match kro
+    if (!userData || !(await bcrypt.compare(password, userData.password))) {
+      const error = new Error("Invalid email or password");
+      error.statusCode = 400;
+      return next(error);
+    }
+
+    // ACTIVITY CHECK
+    if (userData?.isActive !== true) {
+      const err = new Error("Your account has been suspended.")
+      err.statusCode = 400;
+      return next(err)
+    }
+
+    // password match next step jwt create kro 
+
+    const payload = { userId: userData?._id, role: userData?.role, email }
+
+    const token = jwt.sign(payload, process.env.JWT_SECRET, {
+      expiresIn: "7d"
+    }); // token ko client ko do or cache me store kro 
+
+    // cookie set
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
+
+
+    userData.password = undefined;
     return res.status(200).json({
       success: true,
       message: "Login successful",
-      data: req.body
-
+      data: userData,
+      token,
     });
   } catch (err) {
-    return errorHandler(err, res);
+    return next(err);
   }
 };
 

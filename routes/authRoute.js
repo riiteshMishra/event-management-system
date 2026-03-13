@@ -8,7 +8,7 @@ const createLoginTokenLimit = limiter(2)
 
 router.post("/send-otp", limiter(10), sendOTP);
 router.post("/sign-up", limiter(10, 10), signUp)
-router.post("/login", createLoginTokenLimit, login);
+router.post("/login", limiter(10, 10), login);
 
 
 
