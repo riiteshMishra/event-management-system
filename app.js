@@ -2,6 +2,7 @@ const express = require("express");
 const helmet = require("helmet");
 const fileUpload = require("express-fileupload");
 require("dotenv").config()
+const cookieParser = require("cookie-parser")
 
 const dns = require("dns");
 dns.setServers([
@@ -29,6 +30,7 @@ connectdb()
 cloudinaryConnect()
 // Body parser
 app.use(express.json());
+app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 
 // Security

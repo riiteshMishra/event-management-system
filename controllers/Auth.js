@@ -8,7 +8,10 @@ const { ROLES } = require("../utils/helper");
 const Profile = require("../models/profile")
 const jwt = require("jsonwebtoken")
 require("dotenv").config()
-const cookie = require("cookie")
+const cookie = require("cookie");
+const ApiError = require("../utils/apiError");
+const mailSender = require("../utils/mailSender");
+const passwordChangedTemplate = require("../templates/mail/passwordChaned");
 
 
 
@@ -33,13 +36,13 @@ exports.sendOTP = async (req, res, next) => {
     const randOTP = crypto.randomInt(100000, 999999).toString();
 
     // check existing otp
-    const alreadyOTP = await OTP.findOne({ email });
+    const alreadyOTP = await OTP.findOne({ email }).sort({ createdAt: -1 });
 
-    if (alreadyOTP) {
+    if (alreadyOTP && Date.now() - alreadyOTP.createdAt < 60 * 1000) {
       return res.status(429).json({
         success: false,
-        message: "OTP already sent. Please wait."
-      });
+        message: "Please wait before requesting another OTP"
+      })
     }
 
     const data = await OTP.create({
@@ -189,7 +192,7 @@ exports.signUp = async (req, res, next) => {
   }
 }
 
-// TODO LOGIN
+// TODO LOGIN 14/03/2026 done
 exports.login = async (req, res, next) => {
   try {
 
@@ -253,5 +256,118 @@ exports.login = async (req, res, next) => {
   }
 };
 
-// TODO CHANGE PASSWORD
+// TODO CHANGE PASSWORD 14/03/2026
+exports.changePassword = async (req, res, next) => {
+  try {
+
+    // Get value from client
+    let { oldPassword, password, confirmPassword } = req.body;
+    const { userId } = req.user;
+
+    // validation
+    if (!oldPassword || !password || !confirmPassword) {
+      return next(new ApiError("All fields are required", 400));
+    }
+
+    // Sanitization
+    oldPassword = oldPassword.toString().trim();
+    password = password.toString().trim();
+    confirmPassword = confirmPassword.toString().trim();
+
+    // new passwor match
+    if (password !== confirmPassword) {
+      return next(new ApiError("Password and confirm password didn't match", 400));
+    }
+
+    // find user
+    const user = await User.findById(userId).select("+password");
+
+    if (!user) {
+      return next(new ApiError("User not found, please login again", 404));
+    }
+
+    // compare password with dbpassword
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+
+    if (!isMatch) {
+      return next(new ApiError("Old password is incorrect", 400));
+    }
+
+    // same password ?
+    if (await bcrypt.compare(password, user.password)) {
+      return next(new ApiError("New password must be different from old password", 400))
+    }
+
+    // set new password
+    user.password = password;
+
+    // save user 
+    await user.save();
+
+
+    // clear old cookies 
+    res.clearCookie("token");
+
+    // payload
+    const payload = {
+      userId: user?._id,
+      role: user?.role
+    }
+
+    const newToken = jwt.sign(payload, process.env.JWT_SECRET, {
+      expiresIn: "7d"
+    });
+
+    // send email
+    const userName = `${user.firstName} ${user.lastName}`;
+
+    try {
+      await mailSender(
+        user.email,
+        "Password Changed",
+        passwordChangedTemplate(userName)
+      );
+    } catch (err) {
+      console.log("Error while sending mail", err)
+    }
+
+
+    res.cookie("token", newToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Password changed successfully",
+      token: newToken,
+    });
+
+  } catch (err) {
+    console.log("Error while changing password", err);
+    return next(err);
+  }
+};
+
+
+// CRAETE FORGOT PASSWORD TOKEN
+exports.createForgotPassworToken = async (req, res, next) => {
+  try {
+    
+  } catch (err) {
+    console.log("Error while creating forgot password token", err);
+    return next(err)
+  }
+}
+
 // TODO FORGOT PASSWORD
+exports.forgotPassword = async (req, res, next) => {
+  try {
+
+  } catch (err) {
+    console.log("Error while forgotting password", err)
+    return next(err)
+  }
+}

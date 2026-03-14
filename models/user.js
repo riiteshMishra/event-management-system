@@ -67,7 +67,12 @@ const userSchema = new mongoose.Schema({
     isVerified: {
         type: Boolean,
         default: false
-    }
+    },
+    language: {
+        type: String,
+        enum: ["en", "hi"],
+        default: "en"
+    },
 
 }, { timestamps: true });
 
