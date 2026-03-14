@@ -12,6 +12,8 @@ const cookie = require("cookie");
 const ApiError = require("../utils/apiError");
 const mailSender = require("../utils/mailSender");
 const passwordChangedTemplate = require("../templates/mail/passwordChaned");
+const resetPasswordTemplate = require("../templates/mail/reset-password");
+const passwordResetSuccessTemplate = require("../templates/mail/passwordResetSuccessTemplate");
 
 
 
@@ -353,21 +355,134 @@ exports.changePassword = async (req, res, next) => {
 
 
 // CRAETE FORGOT PASSWORD TOKEN
-exports.createForgotPassworToken = async (req, res, next) => {
+exports.generateResetPasswordToken = async (req, res, next) => {
   try {
-    
-  } catch (err) {
-    console.log("Error while creating forgot password token", err);
-    return next(err)
-  }
-}
 
-// TODO FORGOT PASSWORD
+    // get email from client
+    let { email } = req.body;
+
+    // validation
+    if (!email) {
+      return next(new ApiError("Email is required", 400));
+    }
+
+    // sanitization
+    email = email.toString().trim().toLowerCase();
+
+    // check user
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return next(new ApiError("User not found. Please sign up first.", 404));
+    }
+
+    // generate reset token
+    const resetToken = crypto.randomBytes(32).toString("hex");
+
+    // hash token before storing in database
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(resetToken)
+      .digest("hex");
+
+    // save token and expiry
+    user.resetPasswordToken = hashedToken;
+    user.resetPasswordExpires = Date.now() + 5 * 60 * 1000; // 5 minutes
+
+    await user.save();
+
+    // send reset email
+    const userName = `${user.firstName} ${user.lastName}`;
+
+    await mailSender(
+      user.email,
+      "Reset Your Password",
+      resetPasswordTemplate(userName, resetToken)
+    );
+
+    // response
+    return res.status(200).json({
+      success: true,
+      message: "Password reset link has been sent to your email.",
+      resetToken
+    });
+
+  } catch (err) {
+    console.error("Error while generating reset password token:", err.message);
+    return next(err);
+  }
+};
+
+// TODO RESET PASSWORD USING TOKEN
 exports.forgotPassword = async (req, res, next) => {
   try {
 
+    const { token } = req.params;
+    let { password, confirmPassword } = req.body;
+
+    // validation
+    if (!token) {
+      return next(new ApiError("Reset token is missing", 400));
+    }
+
+    if (!password || !confirmPassword) {
+      return next(new ApiError("All fields are required", 400));
+    }
+
+    // sanitization
+    password = password.toString().trim();
+    confirmPassword = confirmPassword.toString().trim();
+
+    // password match
+    if (password !== confirmPassword) {
+      return next(new ApiError("Password and Confirm Password must be same", 400));
+    }
+
+    // convert token to hashed token
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(token)
+      .digest("hex");
+
+    // find user with valid token and expiry
+    const user = await User.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpires: { $gt: Date.now() }
+    }).select("+password");
+
+    if (!user) {
+      return next(new ApiError("Invalid or expired reset token", 400));
+    }
+
+    // update password
+    user.password = password;
+
+    // remove reset token fields
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+
+    await user.save();
+
+    // send success email
+    const userName = `${user.firstName} ${user.lastName}`;
+
+    try {
+      await mailSender(
+        user.email,
+        "Password Changed Successfully",
+        passwordResetSuccessTemplate(userName)
+      );
+    } catch (err) {
+      console.log("Error while sending mail:", err.message);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Password reset successful. You can now login with your new password."
+    });
+
   } catch (err) {
-    console.log("Error while forgotting password", err)
-    return next(err)
+    console.error("Error while resetting password:", err);
+    return next(err);
   }
-}
+};
