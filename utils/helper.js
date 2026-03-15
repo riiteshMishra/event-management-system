@@ -1,5 +1,5 @@
 // file validate
-const Image = ["jpg", "jpeg", "png", "webp"];
+const Image = ["jpg", "jpeg", "png", "webp","svg"];
 const Video = ["mp4", "mov", "avi"];
 
 const validateFile = (file) => {

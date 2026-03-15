@@ -17,10 +17,10 @@ dns.setServers([
 
 const { errorHandler } = require("./middlewares/errorHandler");
 const authRoute = require("./routes/authRoute");
+const profileRoute = require("./routes/profile")
 const limiter = require("./middlewares/rateLimiter");
 
 const hpp = require("hpp");
-const ExpressMongoSanitize = require("express-mongo-sanitize");
 const cors = require("cors");
 const connectdb = require("./config/database");
 const cloudinaryConnect = require("./config/cloudinary");
@@ -61,6 +61,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/v1/auth", authRoute);
+app.use("/api/v1/profile", profileRoute);
 
 // Route not found
 app.use((req, res) => {
