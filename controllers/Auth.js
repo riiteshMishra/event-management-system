@@ -14,6 +14,7 @@ const mailSender = require("../utils/mailSender");
 const passwordChangedTemplate = require("../templates/mail/passwordChaned");
 const resetPasswordTemplate = require("../templates/mail/reset-password");
 const passwordResetSuccessTemplate = require("../templates/mail/passwordResetSuccessTemplate");
+const otpSendTemplate = require("../templates/mail/otpSend");
 
 
 
@@ -52,10 +53,29 @@ exports.sendOTP = async (req, res, next) => {
       otp: randOTP
     });
 
+    if (!data) {
+      return next(new ApiError("OTP creation failed", 500))
+    }
+
+    const devlopmentOTP = process.env.NODE_ENV === "development" ? console.log("OTP", randOTP) : () => { }
+
+    // OTP SEND
+    try {
+      await mailSender(
+        email,
+        "OTP Verification",
+        otpSendTemplate(randOTP, email)
+      );
+
+    } catch (err) {
+      console.log("Error while sending OTP email", err);
+      // next(err);
+    }
+
     return res.status(201).json({
       success: true,
       message: "OTP sent successfully",
-      data: data.otp
+      // data: data.otp
     });
 
   } catch (err) {
@@ -116,27 +136,32 @@ exports.signUp = async (req, res, next) => {
     }
 
     // OTP Match
-    const dbOtp = await OTP.findOne({ email }).sort({ createdAt: -1 });
+    const dbOTP = await OTP.findOne({ email }).sort({ createdAt: -1 });
 
-    if (!dbOtp) {
+    if (!dbOTP) {
       const err = new Error("OTP expired or not found");
       err.statusCode = 404;
       return next(err);
     }
 
-    if (dbOtp.otp !== otp) {
+    // Match Hash OTP
+
+    const OTP_EXPIRY = 5 * 60 * 1000;
+
+    if (Date.now() - dbOTP.createdAt > OTP_EXPIRY) {
+      const err = new Error("OTP expired");
+      err.statusCode = 400;
+      return next(err);
+    }
+
+    const isMatch = await bcrypt.compare(otp, dbOTP.otp)
+
+    if (!isMatch) {
       const err = new Error("Invalid OTP");
       err.statusCode = 400;
       return next(err);
     }
 
-    const OTP_EXPIRY = 5 * 60 * 1000;
-
-    if (Date.now() - dbOtp.createdAt > OTP_EXPIRY) {
-      const err = new Error("OTP expired");
-      err.statusCode = 400;
-      return next(err);
-    }
     // OTP matched next step
 
     if (!ROLES.includes(role)) {

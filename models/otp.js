@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const mailSender = require("../utils/mailSender");
 const otpSendTemplate = require("../templates/mail/otpSend");
+const bcrypt = require("bcrypt")
 
 const otpSchema = new mongoose.Schema({
     email: {
@@ -19,23 +20,18 @@ const otpSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 
-// email send after OTP saved
-otpSchema.post("save", async function (doc, next) {
-    try {
-        // console.log("OTP saved, sending email to:", doc.email);
 
-        await mailSender(
-            doc.email,
-            "OTP Verification",
-            otpSendTemplate(doc.otp, doc.email)
-        );
+// HASH OTP BEFORE SAVE
+otpSchema.pre("save", async function () {
 
-        next();
+    if (!this.isModified("otp"))
+        return
 
-    } catch (err) {
-        console.log("Error while sending OTP email", err);
-        next(err);
-    }
+    this.otp = await bcrypt.hash(this.otp, 10);
 });
+
+
+// SEND EMAIL AFTER SAVE
+
 
 module.exports = mongoose.model("One_Time_Password", otpSchema);
