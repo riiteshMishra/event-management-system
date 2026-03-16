@@ -3,7 +3,6 @@ const AppError = require("../utils/apiError");
 const fileUploader = require("../utils/fileUploader");
 const { validateFile } = require("../utils/helper");
 const Profile = require("../models/profile")
-const Address = require("../models/address");
 
 // Avatar Upload
 exports.updateAvatar = async (req, res, next) => {
@@ -111,7 +110,7 @@ exports.updateProfile = async (req, res, next) => {
     // bio and website
     if (bio) profile.bio = bio;
     if (website) profile.website = website;
-
+  
     await user.save();
     await profile.save();
 
@@ -126,3 +125,14 @@ exports.updateProfile = async (req, res, next) => {
     return next(err);
   }
 };
+
+
+// address
+exports.updateAddress = async (req, res, next) => {
+  try {
+    let { house, village, district, state, pincode, landmark } = req.body;
+  } catch (err) {
+    console.log("Error while updating address",);
+    return next(err)
+  }
+}

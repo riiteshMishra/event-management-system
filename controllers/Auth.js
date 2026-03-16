@@ -8,7 +8,7 @@ const { ROLES } = require("../utils/helper");
 const Profile = require("../models/profile")
 const jwt = require("jsonwebtoken")
 require("dotenv").config()
-const cookie = require("cookie");
+const Address = require("../models/address");
 const ApiError = require("../utils/apiError");
 const mailSender = require("../utils/mailSender");
 const passwordChangedTemplate = require("../templates/mail/passwordChaned");
@@ -172,19 +172,14 @@ exports.signUp = async (req, res, next) => {
 
     // avatar
     const image = `https://api.dicebear.com/9.x/adventurer/svg?seed=${email}`
+    const coverImage = `https://picsum.photos/seed/${email}/1200/300`
 
     // Create Profile
     const profile = new Profile({
       gender: null,
       dateOfBirth: null,
-      coverImage: null,
+      coverImage: coverImage,
       bio: null,
-      address: {
-        village: null,
-        district: null,
-        state: null,
-        pincode: null
-      }
     });
 
     // Create User
@@ -197,12 +192,26 @@ exports.signUp = async (req, res, next) => {
       password,
       profile: profile._id,
       avatar: image,
-    })
+    });
 
-    // save user id in profile
-    profile.userId = user?._id;
-    await profile.save()
+    // link user in profile
+    profile.userId = user._id;
 
+
+    // Create Address
+    const address = new Address({
+      userId: user._id,
+      profileId: profile._id,
+    });
+
+    // save address
+    await address.save();
+
+    // link address in profile
+    profile.address = address._id;
+
+    // save profile
+    await profile.save();
 
     // delete OTP so it can't be reused
     await OTP.deleteMany({ email })
