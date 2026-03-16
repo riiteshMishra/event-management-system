@@ -2,57 +2,73 @@ const mongoose = require("mongoose");
 
 const profileSchema = new mongoose.Schema({
 
-    userId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-        required: true,
-        unique: true
-    },
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+    unique: true
+  },
 
-    gender: {
-        type: String,
-        enum: ["male", "female", "other"]
-    },
+  gender: {
+    type: String,
+    enum: ["male", "female", "other"]
+  },
 
-    dateOfBirth: {
-        type: Date,
-        default: null
-    },
+  dateOfBirth: {
+    type: Date,
+    default: null
+  },
 
-    // ADDRESS
-    address: {
-        village: {
-            type: String,
-            trim: true,
-            lowercase: true,
-        },
-        district: {
-            type: String,
-            trim: true,
-            lowercase: true,
-        },
-        state: {
-            type: String,
-            trim: true,
-            lowercase: true,
-        },
-        pincode: {
-            type: String,
-            trim: true
-        }
-    },
+  bio: {
+    type: String,
+    trim: true,
+    maxlength: 300
+  },
 
-    coverImage: {
-        type: String,
-        default: ""
-    },
+  coverImage: {
+    type: String,
+    default: ""
+  },
 
-    bio: {
-        type: String,
-        trim: true,
-        lowercase: true,
-        maxlength: 300
+  address: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Address"
+  },
+
+  website: {
+    type: String,
+    trim: true
+  },
+
+  skills: [{
+    type: String,
+    trim: true,
+    lowercase: true
+  }],
+
+  socialLinks: {
+    github: {
+      type: String,
+      trim: true
+    },
+    linkedin: {
+      type: String,
+      trim: true
+    },
+    twitter: {
+      type: String,
+      trim: true
+    },
+    instagram: {
+      type: String,
+      trim: true
     }
+  },
+
+  isPublic: {
+    type: Boolean,
+    default: true
+  }
 
 }, { timestamps: true });
 
