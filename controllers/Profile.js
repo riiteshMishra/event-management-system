@@ -138,6 +138,19 @@ exports.updateAddress = async (req, res, next) => {
       return next(new AppError("req.body not found, please the valid req.body", 404))
 
     let { house, village, district, state, pincode, landmark } = req.body;
+
+    // NOTHING TO update
+    if (
+      !house &&
+      !village &&
+      !district &&
+      !state &&
+      !pincode &&
+      !landmark
+    ) {
+      return next(new AppError("Nothing to update", 400));
+    }
+    
     const { userId } = req.user
     const user = await User.findById(userId);
     if (!user) return next(new AppError("User not found, Please login again", 404))
