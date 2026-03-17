@@ -22,7 +22,8 @@ const addressSchema = new mongoose.Schema({
     village: {
         type: String,
         trim: true,
-        lowercase: true
+        lowercase: true,
+        enum: ["balua", "belwa", "mahuawa", "other"]
     },
 
     district: {
