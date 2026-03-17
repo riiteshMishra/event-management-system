@@ -9,7 +9,7 @@ const router = express.Router();
 router.post("/send-otp", limiter(2), sendOTP);
 
 // SIGN UP
-router.post("/sign-up", limiter(2, 60), signUp);
+router.post("/sign-up", limiter(10, 60), signUp);
 
 // LOGIN
 router.post("/login", limiter(3), login);

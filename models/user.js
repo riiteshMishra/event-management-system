@@ -54,7 +54,7 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
         trim: true,
-        enum: ["super-admin", "admin", "gram-prdhan"]
+        enum: ["super-admin", "admin", "gram-pradhan"]
     },
     candidate: {
         type: mongoose.Schema.Types.ObjectId,

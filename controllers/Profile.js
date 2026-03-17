@@ -1,3 +1,4 @@
+const mongoose = require("mongoose")
 const User = require("../models/user");
 const AppError = require("../utils/apiError");
 const fileUploader = require("../utils/fileUploader");
@@ -5,6 +6,10 @@ const { validateFile } = require("../utils/helper");
 const Profile = require("../models/profile")
 const Address = require("../models/address");
 const { upDistricts, indiaStates } = require("../utils/indian_states");
+
+
+
+
 // Avatar Upload
 exports.updateAvatar = async (req, res, next) => {
   try {
@@ -150,7 +155,7 @@ exports.updateAddress = async (req, res, next) => {
     ) {
       return next(new AppError("Nothing to update", 400));
     }
-    
+
     const { userId } = req.user
     const user = await User.findById(userId);
     if (!user) return next(new AppError("User not found, Please login again", 404))
@@ -233,6 +238,154 @@ exports.updateAddress = async (req, res, next) => {
     })
   } catch (err) {
     console.log("Error while updating address",);
+    return next(err)
+  }
+}
+
+// get users
+exports.getAllUsers = async (req, res, next) => {
+  try {
+
+    const users = await User.find({
+      role: { $ne: "super-admin" },
+      isActive: true
+    }).select("-password");
+
+    const message =
+      users.length === 0
+        ? "Currently there are no users"
+        : "Users fetched successfully";
+
+    return res.status(200).json({
+      success: true,
+      message,
+      data: users
+    });
+
+  } catch (err) {
+    console.log("Error while getting all users", err);
+    return next(err);
+  }
+};
+
+//Get user by ID
+exports.getUserById = async (req, res, next) => {
+  try {
+    const userId = req.params.userId || req.body.userId;
+
+    if (!userId)
+      return next(new AppError("User Id is required", 400));
+
+    if (!mongoose.Types.ObjectId.isValid(userId))
+      return next(new AppError("Invalid User ID"))
+
+    // fetch user
+    const user = await User.findById(userId).populate("profile").select("-password");
+
+    if (!user)
+      return next(new AppError("User not found", 404));
+
+    return res.status(200).json({
+      success: true,
+      message: "User fetched successfully",
+      data: user
+    })
+  } catch (err) {
+    console.log("Error while Getting user", err);
+    return next(err)
+  }
+}
+
+// Get User address
+exports.getUserAddress = async (req, res, next) => {
+  try {
+    const { userId } = req.params
+
+    if (!userId)
+      return next(new AppError("User ID is requried", 400));
+
+    if (!mongoose.Types.ObjectId.isValid(userId))
+      return next(new AppError("Invalid User Id", 400));
+
+    // Address
+    const address = await Address.findOne({ userId });
+
+    if (!address)
+      return next(new AppError("Address not found", 404));
+
+    return res.status(200).json({
+      success: true,
+      message: "User address fetched successfully",
+      data: address
+    })
+  } catch (err) {
+    console.log("Error while Fetching User Address", err);
+    return next(err)
+  }
+}
+
+// Get User Profile
+exports.getUserProfile = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+
+    if (!userId)
+      return next(new AppError("User ID is requried", 400))
+
+    if (!mongoose.Types.ObjectId.isValid(userId))
+      return next(new AppError("Invalid user Id"));
+
+    // find Profile
+    const userProfile = await Profile.findOne({ userId }).populate({
+      path: "userId",
+      select: "firstName lastName email"
+    });
+
+    // console.log("userId", userId)
+    if (!userProfile)
+      return next(new AppError("Profile not found"))
+
+
+    return res.status(200).json({
+      success: true,
+      message: "Profile fetched successfully",
+      data: userProfile,
+      user: userId
+    })
+  } catch (err) {
+    console.log("Error While Getting User Profile", err);
+    return next(err)
+  }
+}
+
+// Deactivate user
+exports.toggleUserActivation = async (req, res, next) => {
+  try {
+    const { userId } = req.body;
+    if (!userId)
+      return next(new AppError("User ID is required", 400))
+
+    if (!mongoose.Types.ObjectId.isValid(userId))
+      return next("Invalid User ID", 400);
+
+    // user de Activate
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return next(new AppError("User not found", 404));
+    }
+
+    const message = user.isActive ? "Blocked" : "UnBlocked";
+
+    user.isActive = !user.isActive;
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: `User ${message} Successfully`,
+    })
+  } catch (err) {
+    console.log("Error while Deleting user", err);
     return next(err)
   }
 }

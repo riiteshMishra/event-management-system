@@ -38,7 +38,7 @@ exports.auth = async (req, res, next) => {
 exports.isSuperAdmin = async (req, res, next) => {
     try {
 
-        const userId = req.user?._id;
+        const { userId } = req.user;
 
         if (!userId) {
             return next(new ApiError("User ID missing. Please login again", 401));
@@ -68,7 +68,7 @@ exports.isSuperAdmin = async (req, res, next) => {
 exports.isAdmin = async (req, res, next) => {
     try {
 
-        const userId = req.user?._id;
+        const { userId } = req.user
 
         if (!userId) {
             return next(new ApiError("User ID missing. Please login again", 401));
@@ -98,7 +98,7 @@ exports.isAdmin = async (req, res, next) => {
 exports.isGramPradhan = async (req, res, next) => {
     try {
 
-        const userId = req.user?._id;
+        const { userId } = req.user;
 
         if (!userId) {
             return next(new ApiError("User ID missing. Please login again", 401));
