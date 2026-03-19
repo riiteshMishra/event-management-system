@@ -1,5 +1,5 @@
 // file validate
-const Image = ["jpg", "jpeg", "png", "webp","svg"];
+const Image = ["jpg", "jpeg", "png", "webp", "svg"];
 const Video = ["mp4", "mov", "avi"];
 
 const validateFile = (file) => {
@@ -41,9 +41,13 @@ const dateHandler = (date = Date.now()) => {
 const ROLES = ["super-admin", "admin", "gram-pradhan"];
 
 
+// Event VAlidator
+const EVENTS = ["election", "party", "meeting", "function", "festival"]
+
 
 module.exports = {
     validateFile,
     dateHandler,
     ROLES,
+    EVENTS,
 };
