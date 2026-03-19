@@ -15,15 +15,16 @@ dns.setServers([
 // console.log("DNS Servers:", dns.getServers());
 
 
-const { errorHandler } = require("./middlewares/errorHandler");
-const authRoute = require("./routes/authRoute");
-const profileRoute = require("./routes/profile")
-const limiter = require("./middlewares/rateLimiter");
+const { errorHandler } = require("./src/middlewares/errorHandler");
+const authRoute = require("./src/routes/authRoute");
+const profileRoute = require("./src/routes/profile");
+const electionRoute = require("./src/routes/election.route")
+const limiter = require("./src/middlewares/rateLimiter");
 
 const hpp = require("hpp");
 const cors = require("cors");
-const connectdb = require("./config/database");
-const cloudinaryConnect = require("./config/cloudinary");
+const connectdb = require("./src/config/database")
+const cloudinaryConnect = require("./src/config/cloudinary");
 
 const app = express();
 connectdb()
@@ -62,6 +63,7 @@ app.get("/", (req, res) => {
 
 app.use("/api/v1/auth", authRoute);
 app.use("/api/v1/profile", profileRoute);
+app.use("/api/v1/election", electionRoute)
 
 // Route not found
 app.use((req, res) => {
