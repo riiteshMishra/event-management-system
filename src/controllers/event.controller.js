@@ -339,7 +339,7 @@ exports.updateEvent = async (req, res, next) => {
 // TODO - GET All Events
 exports.getEvents = async (req, res, next) => {
     try {
-        const events = await Event.find({}).sort({ createdAt: -1 });
+        const events = await Event.find({ isDeleted: false }).sort({ createdAt: -1 });
 
         const now = new Date();
 
