@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const Event = require("../models/Event.model");
 const { EVENTS, dateHandler } = require("../utils/helper");
-const AppError = require("../utils/ApiError");
+const AppError = require("../utils/apiError");
 const { indiaStates, upDistricts } = require("../utils/indian_states")
 const Candidate = require("../models/cadidate")
 const Gallery = require("../models/gallery.model")
@@ -176,8 +176,10 @@ exports.createEvent = async (req, res, next) => {
 // Update Event
 exports.updateEvent = async (req, res, next) => {
     try {
+
         // Extract data from request body
-        let { title, description, type, state, district, village, startDate, endDate, instructions, eventId } = req.body;
+        let { eventId } = req.params;
+        let { title, description, type, state, district, village, startDate, endDate, instructions, } = req.body;
 
         // Extract userId from auth middleware
         const { userId } = req.user;
