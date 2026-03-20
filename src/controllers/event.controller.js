@@ -3,6 +3,8 @@ const Event = require("../models/Event.model");
 const { EVENTS, dateHandler } = require("../utils/helper");
 const AppError = require("../utils/ApiError");
 const { indiaStates, upDistricts } = require("../utils/indian_states")
+const Candidate = require("../models/cadidate")
+const Gallery = require("../models/gallery.model")
 
 // Create Event
 exports.createEvent = async (req, res, next) => {
@@ -332,7 +334,7 @@ exports.updateEvent = async (req, res, next) => {
     }
 }
 
-// Get Events // TODO - GET All Events
+// TODO - GET All Events
 exports.getEvents = async (req, res, next) => {
     try {
         const events = await Event.find({}).sort({ createdAt: -1 });
@@ -363,4 +365,72 @@ exports.getEvents = async (req, res, next) => {
 };
 
 // TODO - GET Event BY Slug
+exports.getEventBySlug = async (req, res, next) => {
+    try {
+        const { slug } = req.params;
+
+        if (!slug)
+            return next(new AppError("Slug is required", 400));
+
+        const formattedSlug = slug.toLowerCase().trim();
+
+        const event = await Event.findOne({
+            slug: formattedSlug,
+            isDeleted: false
+        }).populate("candidates")
+            .populate("gallery")
+            .populate({
+                path: "createdBy",
+                select: "firstName lastName email"
+            });
+
+        if (!event)
+            return next(new AppError("Event not found", 404));
+
+        return res.status(200).json({
+            success: true,
+            message: "Event fetched successfully",
+            data: event
+        });
+
+    } catch (err) {
+        console.log("Error While Getting Event By Slug", err);
+        return next(err);
+    }
+};
+
 // TODO - DELETE Event
+exports.deleteEvent = async (req, res, next) => {
+    try {
+        const { eventId } = req.params;
+        const { userId } = req.user;
+
+        if (!eventId)
+            return next(new AppError("Event ID is required", 400));
+
+        const event = await Event.findById(eventId);
+
+        if (!event)
+            return next(new AppError("Event not found", 404));
+
+        //  ownership check
+        if (event.createdBy.toString() !== userId)
+            return next(new AppError("You are not allowed to delete this event", 403));
+
+        //  soft delete
+        event.isDeleted = true;
+        event.deletedAt = new Date();
+        event.deletedBy = userId;
+
+        await event.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Event deleted successfully",
+        });
+
+    } catch (err) {
+        console.log("Error while Deleting the Event", err);
+        return next(err);
+    }
+};

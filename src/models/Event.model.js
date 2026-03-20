@@ -89,6 +89,10 @@ const eventSchema = new mongoose.Schema({
         lowercase: true,
         trim: true
     },
+    isDeleted: {
+        type: Boolean,
+        default: false
+    }
 
 }, { timestamps: true });
 
