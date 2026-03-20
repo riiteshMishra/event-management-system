@@ -1,7 +1,8 @@
 const mongoose = require("mongoose");
 const Event = require("../models/Event.model");
-const { EVENTS } = require("../utils/helper");
+const { EVENTS, dateHandler } = require("../utils/helper");
 const AppError = require("../utils/ApiError");
+const { indiaStates, upDistricts } = require("../utils/indian_states")
 
 // Create Event
 exports.createEvent = async (req, res, next) => {
@@ -42,7 +43,7 @@ exports.createEvent = async (req, res, next) => {
         event.title = title.toString().toLowerCase().trim();
 
         // Sanitize and assign description
-        event.description = description.toString().toLowerCase().trim();
+        event.description = description.toString().trim();
 
         // Normalize and validate type
         type = type.toString().toLowerCase().trim();
@@ -52,9 +53,40 @@ exports.createEvent = async (req, res, next) => {
         event.type = type;
 
         // Sanitize location fields
-        event.state = state.toString().toLowerCase().trim();
-        event.district = district.toString().toLowerCase().trim();
-        event.village = village.toString().toLowerCase().trim();
+        // State
+        const formattedState = state.toString().toLowerCase().trim();
+
+        const validState = indiaStates.some(
+            s => s.name === formattedState
+        );
+
+        if (!validState)
+            return next(new AppError("Invalid state name", 400));
+
+        event.state = formattedState;
+
+
+        // District
+        const formattedDistrict = district.toString().toLowerCase().trim();
+
+        const validDistrict = upDistricts.some(
+            d => d.name === formattedDistrict
+        );
+
+        if (!validDistrict)
+            return next(new AppError("Invalid District", 400));
+
+        event.district = formattedDistrict;
+
+        // Village
+        const villages = ['balua', 'belwa', "mahuawa"];
+
+        const formattedVillage = village.toLowerCase().trim();
+
+        if (!villages.includes(formattedVillage))
+            return next(new AppError("Invalid village name", 400));
+
+        event.village = formattedVillage;
 
         // Assign creator
         event.createdBy = userId;
@@ -114,11 +146,11 @@ exports.createEvent = async (req, res, next) => {
 
 
         // SLUG - for SEO
-        event.slug = title
+        event.slug = `${title
             .toLowerCase()
             .trim()
             .replace(/[^a-z0-9\s-]/g, "")
-            .replace(/\s+/g, "-");
+            .replace(/\s+/g, "-")}-${Date.now()}`;
 
         // Save event to database
         await event.save();
@@ -139,7 +171,168 @@ exports.createEvent = async (req, res, next) => {
     }
 };
 
-// Get Events
+// Update Event
+exports.updateEvent = async (req, res, next) => {
+    try {
+        // Extract data from request body
+        let { title, description, type, state, district, village, startDate, endDate, instructions, eventId } = req.body;
+
+        // Extract userId from auth middleware
+        const { userId } = req.user;
+
+        // Validate userId existence
+        if (!userId)
+            return next(new AppError("User ID not found", 404));
+
+
+        // Event ID
+        if (!eventId)
+            return next(new AppError("Event ID is reqruied", 400))
+
+        // Validate userId format (MongoDB ObjectId)
+        if (!mongoose.Types.ObjectId.isValid(userId))
+            return next(new AppError("Invalid User ID", 400));
+
+        // Event
+        const event = await Event.findById(eventId);
+
+        if (!event)
+            return next(new AppError("Event not Found", 404));
+
+        // Title
+        if (title) {
+            title = title.toString().toLowerCase().trim();
+            event.title = title;
+        }
+
+        // Description
+        if (description) {
+            description = description.toString().trim();
+            event.description = description;
+        }
+
+        // Type
+        if (type) {
+            const formatedType = type.toString().toLowerCase().trim();
+
+            if (!EVENTS.includes(formatedType))
+                return next(new AppError("Invalid Type", 400));
+
+            event.type = formatedType
+        }
+
+        // State 
+        if (state) {
+            const formatedState = state.toString().toLowerCase().trim();
+
+            const validState = indiaStates.some(
+                s => s.name === formatedState
+            );
+
+            if (!validState)
+                return next(new AppError("Invalid state name", 400));
+
+            event.state = formatedState;
+        }
+
+        // District
+        if (district) {
+            const formattedDistrict = district.toString().toLowerCase().trim();
+
+            const validDistrict = upDistricts.some(
+                d => d.name === formattedDistrict
+            );
+
+            if (!validDistrict)
+                return next(new AppError("Invalid District", 400));
+
+            event.district = formattedDistrict;
+        }
+
+        // village
+        const villages = ['balua', 'belwa', "mahuawa"];
+        if (village) {
+            const formattedVillage = village.toString().toLowerCase().trim();
+            if (!villages.includes(formattedVillage))
+                return next(new AppError("Invalid village name", 400));
+            //save
+            event.village = formattedVillage
+        }
+
+        // Instructions
+        if (instructions) {
+            const formatedIntructions = Array.isArray(instructions)
+                ? instructions
+                    .map(instruction => instruction.toString().toLowerCase().trim())
+                    .filter(Boolean)
+                : typeof instructions === "string"
+                    ? instructions
+                        .split(",")
+                        .map(i => i.toLowerCase().trim())
+                        .filter(Boolean)
+                    : [];
+
+            if (formatedIntructions.length === 0)
+                return next(new AppError("Instructions are required", 400));
+
+            event.instructions = formatedIntructions;
+        }
+
+
+        // Start Date & End Date
+        if (startDate || endDate) {
+            const newStartDate = startDate ? new Date(startDate) : event.startDate;
+            const newEndDate = endDate ? new Date(endDate) : event.endDate;
+
+            // Validate date format
+            if (isNaN(newStartDate.getTime()) || isNaN(newEndDate.getTime())) {
+                return next(new AppError("Invalid date format", 400));
+            }
+
+            // Logical check
+            if (newStartDate > newEndDate) {
+                return next(new AppError("Start date must be before end date", 400));
+            }
+
+            event.startDate = newStartDate;
+            event.endDate = newEndDate;
+        }
+
+        // OwnerShip check
+        if (event.createdBy.toString() !== userId)
+            return next(new AppError("You are not allowed to update this event", 403));
+
+        // nothing to update
+
+        if (
+            !title &&
+            !description &&
+            !type &&
+            !state &&
+            !district &&
+            !village &&
+            !startDate &&
+            !endDate &&
+            !instructions
+        ) {
+            return next(new AppError("Nothing to update.", 400))
+        }
+
+        // Save
+        await event.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Event updated successfully",
+            data: event
+        });
+    } catch (err) {
+        console.log("Error while updating Event", err);
+        return next(err)
+    }
+}
+
+// Get Events // TODO - GET All Events
 exports.getEvents = async (req, res, next) => {
     try {
         const events = await Event.find({}).sort({ createdAt: -1 });
@@ -168,3 +361,6 @@ exports.getEvents = async (req, res, next) => {
         return next(err);
     }
 };
+
+// TODO - GET Event BY Slug
+// TODO - DELETE Event
