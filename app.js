@@ -18,7 +18,7 @@ dns.setServers([
 const { errorHandler } = require("./src/middlewares/errorHandler");
 const authRoute = require("./src/routes/authRoute");
 const profileRoute = require("./src/routes/profile");
-const electionRoute = require("./src/routes/election.route")
+const eventRoute = require("./src/routes/event.route")
 const limiter = require("./src/middlewares/rateLimiter");
 
 const hpp = require("hpp");
@@ -63,7 +63,7 @@ app.get("/", (req, res) => {
 
 app.use("/api/v1/auth", authRoute);
 app.use("/api/v1/profile", profileRoute);
-app.use("/api/v1/election", electionRoute)
+app.use("/api/v1/event", eventRoute)
 
 // Route not found
 app.use((req, res) => {

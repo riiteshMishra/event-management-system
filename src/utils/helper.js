@@ -2,9 +2,9 @@
 const Image = ["jpg", "jpeg", "png", "webp", "svg"];
 const Video = ["mp4", "mov", "avi"];
 
-const validateFile = (file) => {
+const validateFile = (fileName) => {
     try {
-        if (!file || typeof file !== "string") {
+        if (!fileName || typeof Name !== "string") {
             return {
                 success: false,
                 message: "Invalid file input"
@@ -12,7 +12,7 @@ const validateFile = (file) => {
         }
 
         // remove query params if present
-        const cleanFile = file.split("?")[0];
+        const cleanFile = fileName.split("?")[0];
 
         const fileExt = cleanFile.split(".").pop().toLowerCase();
 

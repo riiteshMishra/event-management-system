@@ -8,6 +8,7 @@ const {
     getEventBySlug,
     deleteEvent
 } = require("../controllers/event.controller");
+const { createCandidate } = require("../controllers/candidate.controller");
 
 const router = express.Router();
 
@@ -25,5 +26,10 @@ router.get("/events/slug/:slug", rateLimiter(), getEventBySlug);
 
 // Delete event (admin only)
 router.delete("/events/:eventId", auth, isAdmin, deleteEvent);
+
+
+// ====================== CANDIDATE ======================
+router.post("/candidate", rateLimiter(), auth, createCandidate)
+// router.patch("/candidate",rateLimiter(),auth,)
 
 module.exports = router;
