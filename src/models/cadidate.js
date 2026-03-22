@@ -30,7 +30,7 @@ const candidateSchema = new mongoose.Schema({
         type: String,
         trim: true,
         lowercase: true,
-        // unique: true,
+        unique: true,
         required: [true, "Symbol name is required"]
     },
 

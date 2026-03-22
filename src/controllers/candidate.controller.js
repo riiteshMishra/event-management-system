@@ -3,7 +3,9 @@ const Candidate = require("../models/cadidate")
 const AppError = require("../utils/apiError");
 const { validateFile } = require("../utils/helper");
 const fileUploader = require("../utils/fileUploader");
-const Event = require("../models/Event.model")
+const Event = require("../models/Event.model");
+const fileDestroyer = require("../utils/fileDestroyer");
+const cadidate = require("../models/cadidate");
 
 // create Candidate (admins only)
 exports.createCandidate = async (req, res, next) => {
@@ -230,7 +232,10 @@ exports.updateCandidate = async (req, res, next) => {
             if (!validFile)
                 return next(new AppError("Invalid file type", 400));
 
-            const uploadedFile = await fileUploader(symbol)
+            const uploadedFile = await fileUploader(symbol);
+
+            if (!uploadedFile)
+                return next(new AppError("File upload failed", 500));
 
             // save
             candidate.symbol = uploadedFile?.secure_url
@@ -268,3 +273,102 @@ exports.updateCandidate = async (req, res, next) => {
         return next(err)
     }
 }
+
+// TODO - CANDIDATE DELETE
+exports.deleteCandidate = async (req, res, next) => {
+    try {
+        const { candidateId } = req.params;
+
+        if (!candidateId)
+            return next(new AppError("candidate ID not found", 400));
+
+        if (!mongoose.Types.ObjectId.isValid(candidateId))
+            return next(new AppError("Invalid candidate ID", 400));
+
+        // find candidate 
+        const candidate = await Candidate.findById(candidateId);
+
+        if (!candidate)
+            return next(new AppError("Candidate Not Found", 404));
+
+        // media delete
+        const symbolUrl = candidate.symbol;
+
+        if (symbolUrl && typeof symbolUrl === "string" && symbolUrl.includes("cloudinary"))
+            await fileDestroyer(symbolUrl);
+
+        // delete from DB
+        await Candidate.findByIdAndDelete(candidateId);
+
+        return res.status(200).json({
+            success: true,
+            message: "candidate deleted successfully"
+        });
+
+    } catch (err) {
+        console.log("Error while deleting candidate", err);
+        return next(err);
+    }
+};
+
+// TODO - CADIDATE FETCH BY ID
+exports.getCandidate = async (req, res, next) => {
+    try {
+
+        // CANDIDATE ID VALIDAITON 
+        const { candidateId } = req.params;
+
+        if (!candidateId)
+            return next(new AppError("Candidate ID is required", 400));
+
+        if (!mongoose.Types.ObjectId.isValid(candidateId))
+            return next(new AppError("Invalid Candidate Id", 400));
+
+        // find candidate
+        const candidate = await Candidate.findById(candidateId).populate("event", "name date") // only required fields
+            .populate({
+                path: "voters",
+                select: "_id",
+                options: { limit: 10 } // optional
+            })
+
+        if (!candidate)
+            return next(new AppError("Candidate not found"));
+
+
+        return res.status(200).json({
+            success: true,
+            message: "candidate fetched successfully",
+            data: candidate
+        })
+
+    } catch (err) {
+        console.log("Error while fetching cadidate details", err);
+        return next(err)
+    }
+}
+
+// TODO - ALL CANDIDATE  FETCH
+exports.getCandidates = async (req, res, next) => {
+    try {
+        // pagination
+        const { page = 1, limit = 10 } = req.query;
+
+        const candidates = await Candidate.find({})
+            .select("fullName symbol symbolName event") // only required fields
+            .populate("event", "title") // only event name
+            .skip((page - 1) * limit)
+            .limit(Number(limit))
+            .lean(); // performance boost
+
+        return res.status(200).json({
+            success: true,
+            message: "all candidates fetched",
+            data: candidates
+        });
+
+    } catch (err) {
+        console.log("Error while Fetching all candidates", err);
+        return next(err);
+    }
+};
