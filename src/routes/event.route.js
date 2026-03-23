@@ -8,7 +8,7 @@ const {
     getEventBySlug,
     deleteEvent
 } = require("../controllers/event.controller");
-const { createCandidate, updateCandidate, deleteCandidate, getCandidate, getCandidates } = require("../controllers/candidate.controller");
+const { createCandidate, updateCandidate, deleteCandidate, getCandidate, getCandidates } = require("../controllers/Election/candidate.controller");
 
 const router = express.Router();
 

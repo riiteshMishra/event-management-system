@@ -1,11 +1,11 @@
 const mongoose = require("mongoose");
-const Candidate = require("../models/cadidate")
-const AppError = require("../utils/apiError");
-const { validateFile } = require("../utils/helper");
-const fileUploader = require("../utils/fileUploader");
-const Event = require("../models/Event.model");
-const fileDestroyer = require("../utils/fileDestroyer");
-const cadidate = require("../models/cadidate");
+const Candidate = require("../../models/cadidate")
+const AppError = require("../../utils/apiError");
+const { validateFile } = require("../../utils/helper");
+const fileUploader = require("../../utils/fileUploader");
+const Event = require("../../models/Event.model");
+const fileDestroyer = require("../../utils/fileDestroyer");
+const cadidate = require("../../models/cadidate");
 
 // create Candidate (admins only)
 exports.createCandidate = async (req, res, next) => {
@@ -123,7 +123,7 @@ exports.createCandidate = async (req, res, next) => {
 exports.updateCandidate = async (req, res, next) => {
     try {
         //  data fetch 
-        let { fullName, promises, symbolName, message, slogan, contactNumber, email, socialLinks, eventId, } = req.body;
+        let { fullName, promises, symbolName, message, slogan, contactNumber, email, socialLinks, eventId, } = req?.body;
 
         // file check && candidate ID
         const { candidateId } = req.params;
