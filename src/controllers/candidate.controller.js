@@ -123,9 +123,10 @@ exports.createCandidate = async (req, res, next) => {
 exports.updateCandidate = async (req, res, next) => {
     try {
         //  data fetch 
-        let { fullName, promises, symbolName, message, slogan, contactNumber, email, socialLinks, eventId, candidateId } = req.body;
+        let { fullName, promises, symbolName, message, slogan, contactNumber, email, socialLinks, eventId, } = req.body;
 
-        // file check
+        // file check && candidate ID
+        const { candidateId } = req.params;
         const symbol = req.files?.symbol;
 
         // User check
