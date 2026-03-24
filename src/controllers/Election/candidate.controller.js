@@ -107,7 +107,10 @@ exports.createCandidate = async (req, res, next) => {
         // save
         candidate.event = eventId;
         await candidate.save();
+        event.candidates.push(candidate?._id)
+        await event.save();
 
+        
         return res.status(201).json({
             success: true,
             message: "Candidate created successfully",

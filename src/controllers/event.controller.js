@@ -339,7 +339,10 @@ exports.updateEvent = async (req, res, next) => {
 // TODO - GET All Events
 exports.getEvents = async (req, res, next) => {
     try {
-        const events = await Event.find({ isDeleted: false }).sort({ createdAt: -1 });
+        const events = await Event.find({ isDeleted: false }).sort({ createdAt: -1 }).populate({
+            path:"candidates",
+            select:"fullName symbol symbolName contactNumber sloga"
+        });
 
         const now = new Date();
 

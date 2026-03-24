@@ -91,10 +91,12 @@ const candidateSchema = new mongoose.Schema({
     },
 
     // voters
-    voters: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Voter"
-    }
+    voters: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Voter"
+        }
+    ]
 
 }, { timestamps: true });
 

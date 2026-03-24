@@ -29,21 +29,5 @@ const voterSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 
-// store hash for privacy
-voterSchema.pre("save", async function (next) {
-
-    // already hashed hai to skip karo
-    if (!this.isModified("voterIDHash")) {
-        return next();
-    }
-
-    // voter ko private krna 
-    const hash = await bcrypt.hash(this.voterIDHash, 10);
-
-    // save
-    this.voterIDHash = hash;
-
-    next();
-});
 
 module.exports = mongoose.model("Voter", voterSchema);

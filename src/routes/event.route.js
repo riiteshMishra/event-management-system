@@ -9,6 +9,7 @@ const {
     deleteEvent
 } = require("../controllers/event.controller");
 const { createCandidate, updateCandidate, deleteCandidate, getCandidate, getCandidates } = require("../controllers/Election/candidate.controller");
+const { createVote, getElectionResult } = require("../controllers/Election/vote.controller");
 
 const router = express.Router();
 
@@ -34,6 +35,11 @@ router.patch("/candidate/:candidateId", rateLimiter(10, 1), auth, isAdmin, updat
 router.delete("/candidate/:candidateId", rateLimiter(10, 1), auth, isAdmin, deleteCandidate);
 router.get("/candidate/:candidateId", rateLimiter(10, 1), getCandidate)
 router.get("/candidates", rateLimiter(10, 1), getCandidates)
+
+
+// ====================== ELECTION ======================
+router.post("/vote/:candidateId", rateLimiter(), createVote)
+router.get("/election/:eventId/result", rateLimiter(), getElectionResult)
 
 
 
