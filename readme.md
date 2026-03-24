@@ -14,6 +14,15 @@ Is project ka main goal hai:
 
 ## 🚀 Features (Completed)
 
+### 🔑 Authentication & Authorization
+
+* User signup & login system
+* JWT-based authentication
+* Secure password handling
+* Protected routes using middleware
+* Role-based access control (Admin / Super Admin / User)
+* Only authorized users can create events and manage candidates
+
 ### 👤 User Management
 
 * User profile update
