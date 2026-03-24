@@ -38,7 +38,7 @@ router.get("/candidates", rateLimiter(10, 1), getCandidates)
 
 
 // ====================== ELECTION ======================
-router.post("/vote/:candidateId", rateLimiter(), createVote)
+router.post("/vote/:candidateId", rateLimiter(5,60), createVote)
 router.get("/election/:eventId/result", rateLimiter(), getElectionResult)
 
 
