@@ -47,6 +47,57 @@ Is project ka main goal hai:
 * Role-based access (Admin / Super Admin)
 * User activation / deactivation toggle
 
+### 📅 Event Creation
+
+* Create new events (Election, Party, Meeting, Function, Festival)
+* Update existing events
+* Delete events (Admin only)
+* Fetch all events
+* Get event by slug
+
+---
+
+### 🔐 Secure Voting Management
+
+* OTP-based voting system
+* One vote per user per event
+* Secure voter identity using SHA-256 hashing
+* Duplicate vote prevention
+* Candidate-event validation (no cross-event voting)
+* Vote casting via API
+* Result fetching after event completion
+
+#### ⚡ Advanced Features
+
+* Rate limiting to prevent spam voting
+* OTP expiration & automatic cleanup
+* Input sanitization & validation
+* Secure backend with protected routes
+* Event-based voting system (each event has separate voting)
+* Voting allowed only during event duration
+* Auto blocking of invalid or repeated requests
+* Scalable voting logic for multiple events
+* Designed to simulate a real-world election system with security, scalability, and fairness.
+
+---
+
+### 🧑‍🤝‍🧑 Candidate (CRUD Operation)
+
+* Candidate create
+* Candidate update
+* Candidate delete
+* Candidates fetch
+* Candidate fetch by ID
+
+---
+
+### 🗳️ Voting Routes
+
+```
+POST   /vote/:candidateId
+GET    /election/:eventId/result
+```
+
 ---
 
 ## 🛠️ Tech Stack
@@ -56,6 +107,8 @@ Is project ka main goal hai:
 * MongoDB (Mongoose)
 * Cloudinary (Image Upload)
 * JWT Authentication
+* Bcrypt (OTP hashing)
+* Crypto (secure voter hashing)
 
 ---
 
@@ -95,24 +148,13 @@ utils/
 
 ---
 
-## 🔄 Upcoming Features (In Progress)
 
-### 🗳️ Voting System
+### 🗳️ Advanced Voting Features
 
-* Election creation
-* Candidate management
-* One user = one vote
-* Vote counting system
-* Result declaration
-
----
-
-## 🎯 Future Scope
-
-* Real-time voting results
-* District-wise elections
-* Admin dashboard UI
-* Fraud prevention system
+* Live vote counting
+* Real-time leaderboard
+* Tie-case handling
+* Frontend voting UI
 
 ---
 
