@@ -1,4 +1,4 @@
-# 🌾 Gram Panchayat Balua - Digital Voting System
+# 🌾 Gram Panchayat Balua - Event Management & Voting System
 
 ## 📌 Project Overview
 
