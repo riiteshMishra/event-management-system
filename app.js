@@ -40,7 +40,7 @@ app.use(helmet());
 app.use(hpp());
 
 app.use(cors({
-  origin: "http://localhost:4000",
+  origin: "http://localhost:5173",
   credentials: true,
   methods: ["GET", "POST", "PATCH", "DELETE", "PUT"]
 }));
