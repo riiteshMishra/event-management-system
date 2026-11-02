@@ -54,7 +54,7 @@ const dateHandler = (date = Date.now()) => {
 
 
 // USER VALIDATOR
-const ROLES = ["super-admin", "admin", "gram-pradhan"];
+const ROLES = ["super-admin", "admin", "gram-pradhan", "villagers"];
 
 
 // Event VAlidator

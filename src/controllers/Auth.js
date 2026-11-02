@@ -87,7 +87,7 @@ exports.sendOTP = async (req, res, next) => {
 // SIGN UP
 exports.signUp = async (req, res, next) => {
   try {
-    let { firstName, lastName, role, email, password, confirmPassword, phoneNumber, otp } = req.body
+    let { firstName, lastName, role, email, password, confirmPassword, otp } = req.body
 
     // VALIDATION
     if (
@@ -97,7 +97,7 @@ exports.signUp = async (req, res, next) => {
       !email ||
       !password ||
       !confirmPassword ||
-      !phoneNumber || !otp
+      !otp
     ) {
       const error = new Error("All fields are required");
       error.statusCode = 400;
@@ -110,7 +110,6 @@ exports.signUp = async (req, res, next) => {
     lastName = lastName.toString().toLowerCase().trim();
     email = email.toString().toLowerCase().trim()
     role = role.toString().trim()
-    phoneNumber = phoneNumber.toString().trim()
     otp = otp.toString().trim()
 
     // PASSWORD MATCH
@@ -188,7 +187,6 @@ exports.signUp = async (req, res, next) => {
       lastName,
       email,
       role,
-      phoneNumber,
       password,
       profile: profile._id,
       avatar: image,

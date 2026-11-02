@@ -137,11 +137,11 @@ exports.createEvent = async (req, res, next) => {
 
         // Assign thumbnail based on type
         const thumbnailMap = {
-            election: "https://picsum.photos/seed/election/600/400",
-            party: "https://picsum.photos/seed/party/600/400",
-            meeting: "https://picsum.photos/seed/meeting/600/400",
-            function: "https://picsum.photos/seed/function/600/400",
-            festival: "https://picsum.photos/seed/festival/600/400"
+            election: "https://res.cloudinary.com/dpwddonqz/image/upload/v1776491814/election1_z9ewdp.jpg",
+            party: "https://res.cloudinary.com/dpwddonqz/image/upload/v1776492942/birthday-party-games_ymy4fm.jpg",
+            meeting: "https://res.cloudinary.com/dpwddonqz/image/upload/v1776492787/5sr3ekg_pm-modi-cms-meet_625x300_27_July_24_korjlg.webp",
+            function: "https://res.cloudinary.com/dpwddonqz/image/upload/f_auto,q_auto,w_800/v1776492635/79719-wedding-events-gautam-khullar-lead-image_j1y2mj.webp",
+            festival: "https://res.cloudinary.com/dpwddonqz/image/upload/v1776493097/Gemini_Generated_Image_iswoyjiswoyjiswo_utgqiq.jpg"
         };
 
         event.thumbnail = thumbnailMap[type];
@@ -340,8 +340,8 @@ exports.updateEvent = async (req, res, next) => {
 exports.getEvents = async (req, res, next) => {
     try {
         const events = await Event.find({ isDeleted: false }).sort({ createdAt: -1 }).populate({
-            path:"candidates",
-            select:"fullName symbol symbolName contactNumber sloga"
+            path: "candidates",
+            select: "fullName symbol symbolName contactNumber sloga"
         });
 
         const now = new Date();
@@ -373,6 +373,8 @@ exports.getEvents = async (req, res, next) => {
 exports.getEventBySlug = async (req, res, next) => {
     try {
         const { slug } = req.params;
+        let status;
+
 
         if (!slug)
             return next(new AppError("Slug is required", 400));
@@ -392,10 +394,24 @@ exports.getEventBySlug = async (req, res, next) => {
         if (!event)
             return next(new AppError("Event not found", 404));
 
+
+        const now = new Date();
+
+        function getEventStatus(event) {
+            if (now < event.startDate) return "upcoming";
+            if (now >= event.startDate && now <= event.endDate) return "active";
+            return "completed";
+        }
+        status = getEventStatus(event);
+
+        const updatedEvents = {
+            ...event.toObject(), status
+        }
+
         return res.status(200).json({
             success: true,
             message: "Event fetched successfully",
-            data: event
+            data: updatedEvents
         });
 
     } catch (err) {
